@@ -17,11 +17,11 @@ game = True
 finish = False
 lost = 0
 score = 0   
-player_speed = 4.5
+player_speed = 5
 num_fire = 0
 rel_time = False
 reload_start = 0
-reload_time = 3
+reload_time = 0.7
 lives = 3
 last_shot_time = 0
 shot_delay = 0.2
@@ -32,8 +32,8 @@ asteroids = sprite.Group()
 bullets = sprite.Group()
 
 # Шрифты
-font_main = font.Font(None, 36)
-font_big = font.Font(None, 50)
+font_main = font.SysFont('Arial Black', 24)
+font_big = font.SysFont('Arial Black', 36)
 
 # Кадры в секунду
 clock = pygame.time.Clock()
@@ -73,8 +73,8 @@ def reset_game():
         monsters.add(monster)
     
     # Создаём астероиды
-    for i in range(3):
-        asteroid = Enemy('asteroid.png', randint(80, 600), 0, 60, 60, randint(1, 2))
+    for i in range(2):
+        asteroid = Asteroid('asteroid.png', randint(80, 600), 0, 60, 60, randint(1, 2))
         asteroids.add(asteroid)
 
 # ==========================================
@@ -121,6 +121,14 @@ class Enemy(GameSprite):
             lost += 1
 
 
+class Asteroid(GameSprite):
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.y >= 500:
+            self.rect.y = 0
+            self.rect.x = randint(0, 600)
+
+
 class Bullet(GameSprite):
     def update(self):
         self.rect.y -= self.speed
@@ -138,8 +146,8 @@ for i in range(5):
     monster = Enemy('ufo.png', randint(80, 600), 0, 80, 60, randint(1, 2))
     monsters.add(monster)
 
-for i in range(3):
-    asteroid = Enemy('asteroid.png', randint(80, 600), 0, 60, 60, randint(1, 2))
+for i in range(2):
+    asteroid = Asteroid('asteroid.png', randint(80, 600), 0, 60, 60, randint(1, 2))
     asteroids.add(asteroid)
 
 
@@ -214,11 +222,11 @@ while game:
             lives -= 1
             # Создаём новый астероид вместо убитого
             for i in range(len(crash_asteroid)):
-                new_asteroid = Enemy('asteroid.png', randint(80, 600), 0, 60, 60, randint(1, 2))
+                new_asteroid = Asteroid('asteroid.png', randint(80, 600), 0, 60, 60, randint(1, 2))
                 asteroids.add(new_asteroid)
 
         # 4. ПРОВЕРКА УСЛОВИЙ ПОБЕДЫ/ПОРАЖЕНИЯ
-        if lives <= 0 or lost >= 3:
+        if lives <= 0 or lost >= 5:
             finish = True
             result_text = font_big.render('ПРОИГРЫШ!', 1, (255, 0, 0))
         
@@ -235,15 +243,22 @@ while game:
         bullets.draw(window)
         
         # Текстовая информация
-        text_lost = font_main.render('Пропущено: ' + str(lost), 1, (255, 255, 255))
+        text_lost = font_main.render('Пропущено НЛО: ' + str(lost) + ' / 5', 1, (255, 255, 255))
         window.blit(text_lost, (10, 10))
         
-        text_score = font_main.render('Счет: ' + str(score), 1, (255, 255, 255))
-        window.blit(text_score, (10, 50))
+        text_score = font_main.render('Счет: ' + str(score) + ' / 30', 1, (255, 255, 255))
+        window.blit(text_score, (10, 40))
         
         # ЖИЗНИ
         text_lives = font_main.render('Жизни: ' + str(lives), 1, (255, 255, 255))
-        window.blit(text_lives, (10, 90))
+        window.blit(text_lives, (10, 70))
+        
+        # Индикатор перезарядки
+        if rel_time:
+            reload_text = font_main.render('ПЕРЕЗАРЯДКА...', 1, (255, 100, 0))
+            # Вычисляем позицию по центру
+            text_width = reload_text.get_width()
+            window.blit(reload_text, ((700 - text_width) // 2, 450))
         
         display.update()
     
@@ -258,16 +273,19 @@ while game:
         bullets.draw(window)
         
         # Текстовая информация
-        window.blit(font_main.render('Пропущено: ' + str(lost), 1, (255, 255, 255)), (10, 10))
-        window.blit(font_main.render('Счет: ' + str(score), 1, (255, 255, 255)), (10, 50))
-        window.blit(font_main.render('Жизни: ' + str(lives), 1, (255, 255, 255)), (10, 90))
+        window.blit(font_main.render('Пропущено НЛО: ' + str(lost) + ' / 5', 1, (255, 255, 255)), (10, 10))
+        window.blit(font_main.render('Счет: ' + str(score) + ' / 30', 1, (255, 255, 255)), (10, 40))
+        window.blit(font_main.render('Жизни: ' + str(lives), 1, (255, 255, 255)), (10, 70))
         
         # Результат поверх всего
-        window.blit(result_text, (250, 200))
+        result_width = result_text.get_width()
+        result_height = result_text.get_height()
+        window.blit(result_text, ((700 - result_width) // 2, (500 - result_height) // 2 - 30))
         
         # Подсказка для рестарта
         restart_text = font_main.render('Нажми R для рестарта', 1, (200, 200, 200))
-        window.blit(restart_text, (220, 400))
+        restart_width = restart_text.get_width()
+        window.blit(restart_text, ((700 - restart_width) // 2, 400))
         
         display.update()
     
