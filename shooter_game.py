@@ -87,16 +87,21 @@ def update_window_size():
     display.set_caption('Shooter')
     
     # Обновляем позицию игрока после изменения размера окна
-    if game_state == "GAME" and player:
+    if player:
         player.rect.y = WINDOW_HEIGHT - 100
 
 def upgrade_screen():
-    global WINDOW_HEIGHT, upgrade_points
+    global WINDOW_HEIGHT, upgrade_points, player, game_state
     
     if upgrade_points >= 30 and WINDOW_HEIGHT < 800:
         WINDOW_HEIGHT += 50
-        update_window_size()  # Здесь теперь будет обновляться позиция игрока
+        update_window_size()  # Здесь уже обновляется позиция игрока
         upgrade_points -= 30
+        
+        # Если игрок существует (даже в меню), обновляем его позицию
+        if player:
+            player.rect.y = WINDOW_HEIGHT - 100
+        
         return True
     return False
 
@@ -267,7 +272,7 @@ def show_level_menu(level_num):
     level_menu_active = True
 
 def start_level():
-    global game_state, level_menu_active, finish, score, current_level_score, lost, monsters, asteroids, bullets, boss_active, boss_group, enemy_bullets, boss_shoot_timer
+    global game_state, level_menu_active, finish, score, current_level_score, lost, monsters, asteroids, bullets, boss_active, boss_group, enemy_bullets, boss_shoot_timer, player
     
     game_state = "GAME"
     level_menu_active = False
@@ -296,6 +301,10 @@ def start_level():
     else:
         boss = Boss('boss.png', WINDOW_WIDTH // 2 - 125, -100, 250, 150, 1)
         boss_group.add(boss)
+    
+    # Обновляем позицию игрока (на случай, если экран был расширен в меню)
+    if player:
+        player.rect.y = WINDOW_HEIGHT - 100
 
 def next_level():
     global current_level, score, finish, game_state, upgrade_points, current_level_score, boss_active
